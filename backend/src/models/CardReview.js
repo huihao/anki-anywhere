@@ -1,5 +1,8 @@
 const pool = require('../config/database');
 
+const RELEARNING_MINUTES_AGAIN = 10;
+const RELEARNING_MINUTES_HARD = 60;
+
 class CardReview {
   // SM-2 算法实现 (SuperMemo-2 间隔重复算法)
   static async reviewCard(cardId, userId, quality) {
@@ -12,6 +15,8 @@ class CardReview {
       repetitions: 0
     };
 
+    const relearningMinutes = quality <= 1 ? RELEARNING_MINUTES_AGAIN : RELEARNING_MINUTES_HARD;
+
     if (quality >= 3) {
       // 回答正确
       if (repetitions === 0) {
@@ -23,9 +28,9 @@ class CardReview {
       }
       repetitions += 1;
     } else {
-      // 回答错误，重置
+      // 回答错误，进入短期复习（interval=0 表示分钟级复习）
       repetitions = 0;
-      interval = 1;
+      interval = 0;
     }
 
     // 更新ease factor
@@ -33,7 +38,11 @@ class CardReview {
     if (easeFactor < 1.3) easeFactor = 1.3;
 
     const nextReviewDate = new Date();
-    nextReviewDate.setDate(nextReviewDate.getDate() + interval);
+    if (quality >= 3) {
+      nextReviewDate.setDate(nextReviewDate.getDate() + interval);
+    } else {
+      nextReviewDate.setMinutes(nextReviewDate.getMinutes() + relearningMinutes);
+    }
 
     const query = `
       INSERT INTO card_reviews (card_id, user_id, ease_factor, interval, repetitions, next_review_date, last_review_date)

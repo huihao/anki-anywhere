@@ -24,6 +24,9 @@ struct Card: Codable, Identifiable {
     let front: String
     let back: String
     let sourceUrl: String?
+    let nextReviewDate: Date?
+    let interval: Int?
+    let repetitions: Int?
     let createdAt: Date
     let updatedAt: Date
     
@@ -33,6 +36,9 @@ struct Card: Codable, Identifiable {
         case front
         case back
         case sourceUrl = "source_url"
+        case nextReviewDate = "next_review_date"
+        case interval
+        case repetitions
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
