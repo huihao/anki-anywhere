@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Anki Anywhere</title>
+  <style>
+    body {
+      width: 350px;
+      padding: 15px;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    h2 {
+      margin: 0 0 10px 0;
+      font-size: 18px;
+    }
+    label {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+    button {
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    .status {
+      padding: 8px;
+      border-radius: 4px;
+      display: none;
+    }
+    .status.success {
+      background-color: #d4edda;
+      color: #155724;
+      display: block;
+    }
+    .status.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      display: block;
+    }
+    .settings {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #ccc;
+    }
+    .settings input {
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>创建Anki卡片</h2>
+    
+    <div>
+      <label for="front">正面（问题）:</label>
+      <textarea id="front" placeholder="输入或使用选中的文本"></textarea>
+    </div>
+    
+    <div>
+      <label for="back">背面（答案）:</label>
+      <textarea id="back" placeholder="输入答案"></textarea>
+    </div>
+    
+    <div>
+      <label for="deck">选择卡牌组:</label>
+      <select id="deck">
+        <option value="">加载中...</option>
+      </select>
+    </div>
+    
+    <button id="saveCard">保存卡片</button>
+    
+    <div id="status" class="status"></div>
+    
+    <div class="settings">
+      <label for="apiUrl">API地址:</label>
+      <input type="text" id="apiUrl" placeholder="http://localhost:3000/api" />
+      
+      <label for="token">访问令牌:</label>
+      <input type="password" id="token" placeholder="输入JWT令牌" />
+      
+      <button id="saveSettings">保存设置</button>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
