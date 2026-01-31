@@ -38,9 +38,9 @@ function RichTextEditor({
     handleInput();
   }, [handleInput]);
   
-  const handleBold = () => execCommand('bold');
-  const handleItalic = () => execCommand('italic');
-  const handleUnderline = () => execCommand('underline');
+  const handleBold = useCallback(() => execCommand('bold'), [execCommand]);
+  const handleItalic = useCallback(() => execCommand('italic'), [execCommand]);
+  const handleUnderline = useCallback(() => execCommand('underline'), [execCommand]);
   
   const handleCloze = useCallback(() => {
     const selection = window.getSelection();
@@ -100,7 +100,7 @@ function RichTextEditor({
           break;
       }
     }
-  }, []);
+  }, [handleBold, handleItalic, handleUnderline]);
   
   return (
     <div className="rich-text-editor">

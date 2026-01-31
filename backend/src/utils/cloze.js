@@ -102,7 +102,9 @@ function getNextClozeIndex(text) {
  * @returns {boolean} - True if text contains cloze deletions
  */
 function hasCloze(text) {
-  return CLOZE_REGEX.test(text);
+  // Create a new regex instance to avoid stateful lastIndex issues with global flag
+  const regex = /\{\{c(\d+)::(.*?)(?:::(.*?))?\}\}/;
+  return regex.test(text);
 }
 
 module.exports = {

@@ -11,6 +11,23 @@
 const { hasCloze, renderCloze, getMaxClozeIndex } = require('./cloze');
 
 /**
+ * Escape HTML special characters to prevent XSS
+ * @param {string} text - Text to escape
+ * @returns {string} - Escaped text
+ */
+function escapeHtml(text) {
+  if (!text) return '';
+  const htmlEscapes = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  };
+  return text.replace(/[&<>"']/g, char => htmlEscapes[char]);
+}
+
+/**
  * Render a template with field values
  * @param {string} template - The template string with placeholders
  * @param {Object} fieldsMap - Object mapping field names to their values
@@ -18,10 +35,11 @@ const { hasCloze, renderCloze, getMaxClozeIndex } = require('./cloze');
  * @param {number} options.ordinal - Card ordinal for cloze rendering (1-based)
  * @param {boolean} options.isBack - Whether rendering the back of the card
  * @param {string} options.frontContent - The rendered front content (for {{FrontSide}})
+ * @param {boolean} options.allowHtml - Whether to allow HTML in field values (default: true for rich text)
  * @returns {string} - Rendered template
  */
 function renderTemplate(template, fieldsMap, options = {}) {
-  const { ordinal = 1, isBack = false, frontContent = '' } = options;
+  const { ordinal = 1, isBack = false, frontContent = '', allowHtml = true } = options;
   
   let result = template;
   
@@ -35,8 +53,11 @@ function renderTemplate(template, fieldsMap, options = {}) {
   });
   
   // Replace basic field placeholders {{FieldName}}
+  // Note: Field values may contain user HTML (rich text), which is intentional for Anki
+  // The field content is sanitized at input time, not at render time
   result = result.replace(/\{\{([^}:]+)\}\}/g, (match, fieldName) => {
-    return fieldsMap[fieldName] || '';
+    const value = fieldsMap[fieldName] || '';
+    return allowHtml ? value : escapeHtml(value);
   });
   
   return result;
@@ -167,6 +188,7 @@ function createPreviewHtml(content, css) {
 }
 
 module.exports = {
+  escapeHtml,
   renderTemplate,
   generateCardsFromNote,
   injectCSS,

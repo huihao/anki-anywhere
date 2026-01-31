@@ -1,5 +1,8 @@
 const pool = require('../config/database');
 
+// Number of parameters per card for batch insert
+const CARD_PARAM_COUNT = 6;
+
 class Card {
   static async create(deckId, front, back, sourceUrl = null, noteId = null, ord = 0) {
     const query = `
@@ -18,7 +21,7 @@ class Card {
     if (cards.length === 0) return [];
     
     const values = cards.map((card, i) => {
-      const offset = i * 6;
+      const offset = i * CARD_PARAM_COUNT;
       return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`;
     }).join(', ');
     

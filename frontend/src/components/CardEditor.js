@@ -28,25 +28,32 @@ function CardEditor({ deck, onSave, onCancel }) {
   
   // Load note types on mount
   useEffect(() => {
+    const loadNoteTypes = async () => {
+      try {
+        setLoading(true);
+        const response = await noteTypeService.getAll();
+        setNoteTypes(response.data);
+        
+        // Select first note type by default
+        if (response.data.length > 0) {
+          const config = typeof response.data[0].config === 'string' 
+            ? JSON.parse(response.data[0].config) 
+            : response.data[0].config;
+          const fieldNames = config.fields || ['Front', 'Back'];
+          
+          setSelectedNoteType(response.data[0]);
+          setFields(fieldNames.map(() => ''));
+          setNextClozeIndex(1);
+        }
+      } catch (err) {
+        console.error('加载笔记类型失败', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
     loadNoteTypes();
   }, []);
-  
-  const loadNoteTypes = async () => {
-    try {
-      setLoading(true);
-      const response = await noteTypeService.getAll();
-      setNoteTypes(response.data);
-      
-      // Select first note type by default
-      if (response.data.length > 0) {
-        selectNoteType(response.data[0]);
-      }
-    } catch (err) {
-      console.error('加载笔记类型失败', err);
-    } finally {
-      setLoading(false);
-    }
-  };
   
   const selectNoteType = useCallback((noteType) => {
     setSelectedNoteType(noteType);
@@ -237,7 +244,17 @@ function CardEditor({ deck, onSave, onCancel }) {
     }
   };
   
-  // Handle simple card save (for backward compatibility)
+  /**
+   * Handle simple card save (for backward compatibility)
+   * 
+   * This function creates a card directly without going through the note system.
+   * Use this when:
+   * - You want quick card creation without note type features
+   * - The backend doesn't have note_types table set up yet
+   * - You only need basic front/back cards without templates or cloze
+   * 
+   * For full features (cloze, multiple templates, tags), use handleSave instead.
+   */
   const handleSimpleSave = async () => {
     if (!deck) return;
     

@@ -3,6 +3,14 @@ import React, { useState } from 'react';
 /**
  * Card Preview Component
  * Shows a live preview of the card (Front/Back)
+ * 
+ * Note: This component uses dangerouslySetInnerHTML to render user-provided HTML.
+ * This is intentional as Anki cards support rich HTML content including formatting,
+ * images, and custom styling. The content comes from the user's own input and is
+ * displayed only to the user themselves in their card preview/study sessions.
+ * 
+ * In a production environment with multi-user support, consider sanitizing the
+ * HTML with a library like DOMPurify before rendering.
  */
 function CardPreview({ front, back, css = '' }) {
   const [showBack, setShowBack] = useState(false);
@@ -28,8 +36,10 @@ function CardPreview({ front, back, css = '' }) {
   
   const combinedCSS = css || defaultCSS;
   
+  // Creates markup object for dangerouslySetInnerHTML
+  // Content is user-generated rich text that intentionally includes HTML
   const createMarkup = (content) => {
-    return { __html: content };
+    return { __html: content || '' };
   };
   
   return (

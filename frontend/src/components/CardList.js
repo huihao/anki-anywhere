@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { cardService } from '../services/api';
 
 function CardList({ deck }) {
@@ -8,13 +8,8 @@ function CardList({ deck }) {
   const [newCard, setNewCard] = useState({ front: '', back: '', sourceUrl: '' });
   const [editingCard, setEditingCard] = useState(null);
 
-  useEffect(() => {
-    if (deck) {
-      loadCards();
-    }
-  }, [deck]);
-
-  const loadCards = async () => {
+  const loadCards = useCallback(async () => {
+    if (!deck) return;
     try {
       setLoading(true);
       const response = await cardService.getByDeckId(deck.id);
@@ -24,7 +19,13 @@ function CardList({ deck }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [deck]);
+
+  useEffect(() => {
+    if (deck) {
+      loadCards();
+    }
+  }, [deck, loadCards]);
 
   const handleCreateCard = async (e) => {
     e.preventDefault();

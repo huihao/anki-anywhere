@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 
 /**
  * Tag Input Component
@@ -8,7 +8,9 @@ function TagInput({ value = '', onChange, placeholder = '输入标签，按Enter
   const [inputValue, setInputValue] = useState('');
   
   // Parse tags from string (space-separated)
-  const tags = value.trim() ? value.trim().split(/\s+/) : [];
+  const tags = useMemo(() => {
+    return value.trim() ? value.trim().split(/\s+/) : [];
+  }, [value]);
   
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter' && inputValue.trim()) {
