@@ -379,6 +379,223 @@ curl -H "Authorization: Bearer <token>" \
 }
 ```
 
+---
+
+### 笔记类型管理 (Note Types)
+
+笔记类型定义了卡片的字段结构和模板。
+
+#### GET /api/note-types
+
+获取所有可用的笔记类型（包括系统默认和用户自定义）。
+
+**响应**:
+```json
+[
+  {
+    "id": 1,
+    "user_id": null,
+    "name": "Basic",
+    "config": {
+      "fields": ["Front", "Back"],
+      "templates": [{"name": "Card 1", "front": "{{Front}}", "back": "{{FrontSide}}<hr id=answer>{{Back}}"}],
+      "css": ".card { font-family: arial; font-size: 20px; }"
+    },
+    "created_at": "2024-01-01T00:00:00.000Z",
+    "updated_at": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "user_id": null,
+    "name": "Cloze",
+    "config": {
+      "fields": ["Text", "Extra"],
+      "templates": [{"name": "Cloze", "front": "{{cloze:Text}}", "back": "{{cloze:Text}}<br>{{Extra}}"}],
+      "css": ".card { font-family: arial; } .cloze { font-weight: bold; color: blue; }"
+    },
+    "created_at": "2024-01-01T00:00:00.000Z",
+    "updated_at": "2024-01-01T00:00:00.000Z"
+  }
+]
+```
+
+#### POST /api/note-types
+
+创建新的笔记类型。
+
+**请求体**:
+```json
+{
+  "name": "Vocabulary",
+  "config": {
+    "fields": ["Word", "Definition", "Example"],
+    "templates": [
+      {"name": "Word -> Definition", "front": "{{Word}}", "back": "{{Definition}}<br><i>{{Example}}</i>"}
+    ],
+    "css": ".card { font-family: Georgia; font-size: 18px; }"
+  }
+}
+```
+
+**响应**:
+```json
+{
+  "id": 4,
+  "user_id": 1,
+  "name": "Vocabulary",
+  "config": {...},
+  "created_at": "2024-01-02T00:00:00.000Z",
+  "updated_at": "2024-01-02T00:00:00.000Z"
+}
+```
+
+#### GET /api/note-types/:id
+
+获取指定笔记类型的详细信息。
+
+#### PUT /api/note-types/:id
+
+更新笔记类型。
+
+#### DELETE /api/note-types/:id
+
+删除笔记类型（同时删除关联的笔记和卡片）。
+
+---
+
+### 笔记管理 (Notes)
+
+笔记是存储学习内容的容器，根据笔记类型的模板自动生成卡片。
+
+#### POST /api/notes
+
+创建新笔记并自动生成卡片。
+
+**请求体**:
+```json
+{
+  "noteTypeId": 1,
+  "fields": ["Apple", "苹果"],
+  "tags": "水果 英语::单词",
+  "sourceUrl": "https://example.com",
+  "deckId": 1
+}
+```
+
+**响应**:
+```json
+{
+  "id": 1,
+  "note_type_id": 1,
+  "fields": ["Apple", "苹果"],
+  "tags": "水果 英语::单词",
+  "source_url": "https://example.com",
+  "created_at": "2024-01-02T00:00:00.000Z",
+  "updated_at": "2024-01-02T00:00:00.000Z"
+}
+```
+
+#### GET /api/notes?noteTypeId=1
+
+获取指定类型的所有笔记。
+
+#### GET /api/notes/:id
+
+获取指定笔记的详细信息。
+
+#### PUT /api/notes/:id
+
+更新笔记内容。
+
+**请求体**:
+```json
+{
+  "fields": ["Apple", "苹果（水果）"],
+  "tags": "水果 英语::单词 更新",
+  "sourceUrl": "https://example.com/updated",
+  "deckId": 1,
+  "regenerateCards": true
+}
+```
+
+*注意*: 设置 `regenerateCards: true` 会删除旧卡片并根据更新后的笔记重新生成。
+
+#### DELETE /api/notes/:id
+
+删除笔记（同时删除关联的卡片）。
+
+#### GET /api/notes/:id/cards
+
+获取笔记关联的所有卡片。
+
+#### POST /api/notes/check-duplicate
+
+检查是否存在重复笔记（基于第一个字段）。
+
+**请求体**:
+```json
+{
+  "noteTypeId": 1,
+  "firstFieldValue": "Apple",
+  "excludeNoteId": null
+}
+```
+
+**响应**:
+```json
+{
+  "hasDuplicate": true,
+  "duplicates": [
+    {"id": 1, "fields": ["Apple", "苹果"], ...}
+  ]
+}
+```
+
+#### GET /api/notes/search?tag=英语
+
+按标签搜索笔记。支持层次化标签（如 `语言::日语::动词`）。
+
+#### POST /api/notes/create-cloze
+
+创建填空题标记。
+
+**请求体**:
+```json
+{
+  "text": "hidden content",
+  "existingText": "Some {{c1::other}} text",
+  "index": null,
+  "hint": "提示"
+}
+```
+
+**响应**:
+```json
+{
+  "clozeText": "{{c2::hidden content::提示}}",
+  "index": 2
+}
+```
+
+---
+
+### 填空题 (Cloze Deletion)
+
+填空题使用特殊语法 `{{c1::隐藏内容::提示}}`：
+
+- `c1`, `c2`, `c3`... 表示不同的填空项
+- 每个填空项生成一张独立的卡片
+- 提示（可选）在卡片正面显示
+
+**示例**:
+```
+The {{c1::capital}} of Japan is {{c2::Tokyo}}.
+```
+
+这会生成两张卡片：
+1. 卡片1: "The [capital] of Japan is Tokyo."
+2. 卡片2: "The capital of Japan is [Tokyo]."
+
 ## 错误响应
 
 所有错误响应都遵循以下格式：
