@@ -6,6 +6,8 @@ require('dotenv').config();
 const deckRoutes = require('./routes/decks');
 const cardRoutes = require('./routes/cards');
 const reviewRoutes = require('./routes/reviews');
+const noteTypeRoutes = require('./routes/noteTypes');
+const noteRoutes = require('./routes/notes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,6 +21,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/api/decks', deckRoutes);
 app.use('/api/cards', cardRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/note-types', noteTypeRoutes);
+app.use('/api/notes', noteRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

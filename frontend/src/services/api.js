@@ -46,4 +46,26 @@ export const reviewService = {
   getStats: (cardId) => api.get(`/reviews/stats/${cardId}`),
 };
 
+// NoteType相关API (笔记类型)
+export const noteTypeService = {
+  getAll: () => api.get('/note-types'),
+  getById: (id) => api.get(`/note-types/${id}`),
+  create: (data) => api.post('/note-types', data),
+  update: (id, data) => api.put(`/note-types/${id}`, data),
+  delete: (id) => api.delete(`/note-types/${id}`),
+};
+
+// Note相关API (笔记)
+export const noteService = {
+  getByNoteTypeId: (noteTypeId) => api.get(`/notes?noteTypeId=${noteTypeId}`),
+  getById: (id) => api.get(`/notes/${id}`),
+  create: (data) => api.post('/notes', data),
+  update: (id, data) => api.put(`/notes/${id}`, data),
+  delete: (id) => api.delete(`/notes/${id}`),
+  checkDuplicate: (data) => api.post('/notes/check-duplicate', data),
+  searchByTags: (tag) => api.get(`/notes/search?tag=${encodeURIComponent(tag)}`),
+  createCloze: (data) => api.post('/notes/create-cloze', data),
+  getCards: (noteId) => api.get(`/notes/${noteId}/cards`),
+};
+
 export default api;
