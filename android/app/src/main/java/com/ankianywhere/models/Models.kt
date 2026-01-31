@@ -18,6 +18,9 @@ data class Card(
     val front: String,
     val back: String,
     @SerializedName("source_url") val sourceUrl: String?,
+    @SerializedName("next_review_date") val nextReviewDate: Date?,
+    val interval: Int?,
+    val repetitions: Int?,
     @SerializedName("created_at") val createdAt: Date,
     @SerializedName("updated_at") val updatedAt: Date
 )

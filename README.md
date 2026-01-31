@@ -41,6 +41,8 @@ anki-anywhere/
 - ✅ iOS原生应用（Swift + SwiftUI）
 - ✅ Android原生应用（Kotlin）
 - ✅ SM-2学习算法
+- ✅ 四按钮复习反馈（Again/Hard/Good/Easy）
+- ✅ 失败卡短期复习提示（分钟级）
 - ✅ 卡片复习功能
 - ✅ 随机浏览卡片
 

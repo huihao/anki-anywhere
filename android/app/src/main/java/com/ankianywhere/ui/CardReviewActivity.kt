@@ -21,6 +21,14 @@ class CardReviewActivity : AppCompatActivity() {
     private var currentIndex = 0
     private var showingAnswer = false
     private var deckId: Int = 0
+    private var newCardsLimit: Int = 20
+    private var reviewCardsLimit: Int = 100
+    private val reviewOptions = listOf(
+        ReviewOption(0, "Again", 1),
+        ReviewOption(1, "Hard", 3),
+        ReviewOption(2, "Good", 4),
+        ReviewOption(3, "Easy", 5)
+    )
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,15 +55,26 @@ class CardReviewActivity : AppCompatActivity() {
         }
         
         setupQualityButtons()
+        loadSessionLimits()
         loadDueCards()
     }
     
     private fun setupQualityButtons() {
-        for (i in 0..5) {
-            val buttonId = resources.getIdentifier("quality$i", "id", packageName)
-            findViewById<Button>(buttonId).setOnClickListener {
-                reviewCard(i)
+        reviewOptions.forEach { option ->
+            val buttonId = resources.getIdentifier("quality${option.buttonIndex}", "id", packageName)
+            val button: Button? = findViewById(buttonId)
+            button?.apply {
+                text = option.label
+                setOnClickListener {
+                    reviewCard(option.quality)
+                }
             }
+        }
+
+        for (i in 4..5) {
+            val buttonId = resources.getIdentifier("quality$i", "id", packageName)
+            val button: Button? = findViewById(buttonId)
+            button?.visibility = View.GONE
         }
     }
     
@@ -64,7 +83,7 @@ class CardReviewActivity : AppCompatActivity() {
             runOnUiThread {
                 result.fold(
                     onSuccess = { loadedCards ->
-                        cards = loadedCards
+                        cards = applyReviewLimits(loadedCards)
                         currentIndex = 0
                         showingAnswer = false
                         displayCard()
@@ -82,7 +101,7 @@ class CardReviewActivity : AppCompatActivity() {
             runOnUiThread {
                 result.fold(
                     onSuccess = { loadedCards ->
-                        cards = loadedCards
+                        cards = applyNewLimits(loadedCards)
                         currentIndex = 0
                         showingAnswer = false
                         displayCard()
@@ -98,8 +117,8 @@ class CardReviewActivity : AppCompatActivity() {
     private fun displayCard() {
         if (currentIndex < cards.size) {
             val card = cards[currentIndex]
-            questionTextView.text = card.front
-            answerTextView.text = card.back
+            questionTextView.text = cardQuestionText(card)
+            answerTextView.text = cardAnswerText(card)
             answerTextView.visibility = View.GONE
             showAnswerButton.visibility = View.VISIBLE
             qualityButtonsLayout.visibility = View.GONE
@@ -126,7 +145,8 @@ class CardReviewActivity : AppCompatActivity() {
         apiService.reviewCard(card.id, quality) { result ->
             runOnUiThread {
                 result.fold(
-                    onSuccess = {
+                    onSuccess = { review ->
+                        showIntervalToast(quality, review.interval)
                         nextCard()
                     },
                     onFailure = { error ->
@@ -142,4 +162,62 @@ class CardReviewActivity : AppCompatActivity() {
         showingAnswer = false
         displayCard()
     }
+
+    private fun showIntervalToast(quality: Int, interval: Int) {
+        val hint = if (quality >= 3) {
+            "下次复习: ${interval}天后"
+        } else {
+            "进入短期复习 (10-60分钟内)"
+        }
+        Toast.makeText(this, hint, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun cardQuestionText(card: Card): String {
+        return renderCloze(card.front, false)
+    }
+
+    private fun cardAnswerText(card: Card): String {
+        val base = if (card.back.isNotBlank()) card.back else card.front
+        return renderCloze(base, true)
+    }
+
+    private fun renderCloze(text: String, reveal: Boolean): String {
+        val regex = Regex("\\{\\{c\\d+::(.*?)(::(.*?))?}}", setOf(RegexOption.DOT_MATCHES_ALL))
+        return regex.replace(text) { match ->
+            val answer = match.groups[1]?.value.orEmpty()
+            val hint = match.groups[3]?.value
+            if (reveal) {
+                answer
+            } else if (!hint.isNullOrBlank()) {
+                "[$hint]"
+            } else {
+                "..."
+            }
+        }
+    }
+
+    private fun applyNewLimits(loadedCards: List<Card>): List<Card> {
+        return loadedCards.take(newCardsLimit)
+    }
+
+    private fun applyReviewLimits(loadedCards: List<Card>): List<Card> {
+        val (reviewCards, newCards) = loadedCards.partition { card ->
+            (card.repetitions ?: 0) > 0
+        }
+        val limitedReviewCards = reviewCards.take(reviewCardsLimit)
+        val limitedNewCards = newCards.take(newCardsLimit)
+        return limitedReviewCards + limitedNewCards
+    }
+
+    private fun loadSessionLimits() {
+        val prefs = getSharedPreferences("anki_anywhere", MODE_PRIVATE)
+        newCardsLimit = prefs.getInt("newCardsLimit", 20)
+        reviewCardsLimit = prefs.getInt("reviewCardsLimit", 100)
+    }
 }
+
+private data class ReviewOption(
+    val buttonIndex: Int,
+    val label: String,
+    val quality: Int
+)
