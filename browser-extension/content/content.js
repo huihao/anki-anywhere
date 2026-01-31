@@ -132,10 +132,21 @@ function extractSelectionHtml(range) {
 }
 
 function updateSelectionStore(selectionInfo) {
-  const signature = `${selectionInfo.url || ''}\x00${selectionInfo.text}\x00${selectionInfo.context || ''}`;
+  const signature = JSON.stringify({
+    url: selectionInfo.url || '',
+    text: selectionInfo.text,
+    context: selectionInfo.context || ''
+  });
   if (signature === lastSelectionSignature) return;
   lastSelectionSignature = signature;
-  chrome.runtime.sendMessage({ action: 'updateSelectionInfo', selection: selectionInfo });
+  chrome.runtime.sendMessage(
+    { action: 'updateSelectionInfo', selection: selectionInfo },
+    () => {
+      if (chrome.runtime.lastError) {
+        console.warn('Unable to store selection info:', chrome.runtime.lastError);
+      }
+    }
+  );
 }
 
 // 点击其他地方隐藏按钮

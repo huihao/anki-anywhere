@@ -206,6 +206,6 @@ function shouldPrefillBack(context, frontValue) {
   if (!context) return false;
   const normalizedContext = normalizeSelectionText(context);
   const normalizedFront = normalizeSelectionText(frontValue);
-  if (!normalizedFront) return true;
+  if (!normalizedFront) return true; // 无选中文本时优先填充上下文
   return !normalizedContext.includes(normalizedFront);
 }
