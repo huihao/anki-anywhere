@@ -105,7 +105,7 @@ async function getSelectionInfo() {
   if (!cachedSelection) {
     const selectedText = await getSelectedText();
     if (selectedText) {
-      cachedSelection = cachedSelection || { text: selectedText };
+      cachedSelection = { text: selectedText };
     }
   }
   
@@ -190,7 +190,7 @@ document.getElementById('saveCard').addEventListener('click', async () => {
     }
   }
   
-  if (selectionInfo?.context && !selectionInfo.context.includes(frontField.value)) {
+  if (selectionInfo?.context && (!frontField.value || !selectionInfo.context.includes(frontField.value))) {
     const backField = document.getElementById('back');
     if (!backField.value.trim()) {
       backField.value = selectionInfo.context;

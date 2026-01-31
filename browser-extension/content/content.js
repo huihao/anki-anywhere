@@ -16,8 +16,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // 监听文本选择事件，显示快捷按钮
 let quickAddButton = null;
 let lastSelectionSignature = '';
+let selectionTimer = null;
 
 function handleSelectionCapture() {
+  if (selectionTimer) {
+    clearTimeout(selectionTimer);
+  }
+  selectionTimer = setTimeout(() => {
+    selectionTimer = null;
+    handleSelectionCaptureNow();
+  }, 120);
+}
+
+function handleSelectionCaptureNow() {
   const selectionInfo = buildSelectionInfo();
   
   if (selectionInfo?.text) {
@@ -120,11 +131,7 @@ function extractSelectionHtml(range) {
 }
 
 function updateSelectionStore(selectionInfo) {
-  const signature = JSON.stringify({
-    url: selectionInfo.url,
-    text: selectionInfo.text,
-    context: selectionInfo.context || ''
-  });
+  const signature = `${selectionInfo.url || ''}:${selectionInfo.text}:${selectionInfo.context || ''}`;
   if (signature === lastSelectionSignature) return;
   lastSelectionSignature = signature;
   chrome.runtime.sendMessage({ action: 'updateSelectionInfo', selection: selectionInfo });
