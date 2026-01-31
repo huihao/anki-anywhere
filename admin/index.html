@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Anki Anywhere Admin</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 24px; }
+      form { margin-bottom: 16px; }
+      label { display: block; margin-bottom: 4px; }
+      input, button { padding: 6px; }
+    </style>
+  </head>
+  <body>
+    <h1>Deck Manager</h1>
+    <form id="deck-form">
+      <label for="deck-name">Deck name</label>
+      <input id="deck-name" required />
+      <button type="submit">Create deck</button>
+    </form>
+    <ul id="deck-list"></ul>
+
+    <script>
+      const API_BASE = 'http://localhost:3000';
+      const listEl = document.getElementById('deck-list');
+      const form = document.getElementById('deck-form');
+      const nameInput = document.getElementById('deck-name');
+
+      const loadDecks = async () => {
+        const response = await fetch(`${API_BASE}/decks`);
+        const decks = await response.json();
+        listEl.innerHTML = '';
+        decks.forEach((deck) => {
+          const li = document.createElement('li');
+          li.textContent = deck.name;
+          listEl.appendChild(li);
+        });
+      };
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        await fetch(`${API_BASE}/decks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: nameInput.value })
+        });
+        nameInput.value = '';
+        loadDecks();
+      });
+
+      loadDecks();
+    </script>
+  </body>
+</html>
