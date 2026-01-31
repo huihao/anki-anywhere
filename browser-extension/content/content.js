@@ -132,7 +132,7 @@ function extractSelectionHtml(range) {
 }
 
 function updateSelectionStore(selectionInfo) {
-  const signature = `${selectionInfo.url || ''}:${selectionInfo.text}:${selectionInfo.context || ''}`;
+  const signature = `${selectionInfo.url || ''}\x00${selectionInfo.text}\x00${selectionInfo.context || ''}`;
   if (signature === lastSelectionSignature) return;
   lastSelectionSignature = signature;
   chrome.runtime.sendMessage({ action: 'updateSelectionInfo', selection: selectionInfo });

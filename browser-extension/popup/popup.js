@@ -108,7 +108,7 @@ async function getSelectionInfo() {
       cachedSelection = { text: selectedText };
     }
   }
-  
+
   return cachedSelection;
 }
 
