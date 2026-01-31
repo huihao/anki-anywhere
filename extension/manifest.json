@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Anki Anywhere",
+  "version": "0.1.0",
+  "description": "Save selected text as Anki cards.",
+  "permissions": ["contextMenus", "storage", "activeTab"],
+  "host_permissions": ["http://localhost:3000/*"],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_title": "Anki Anywhere"
+  }
+}
