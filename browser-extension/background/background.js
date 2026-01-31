@@ -17,7 +17,13 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 // 监听消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'openPopup') {
+    if (request.selection) {
+      chrome.storage.session.set({ lastSelection: request.selection });
+    }
     chrome.action.openPopup();
+  }
+  if (request.action === 'updateSelectionInfo' && request.selection) {
+    chrome.storage.session.set({ lastSelection: request.selection });
   }
   return true;
 });
