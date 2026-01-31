@@ -14,8 +14,24 @@ exports.createCard = async (req, res) => {
 exports.getCards = async (req, res) => {
   try {
     const { deckId } = req.params;
-    const cards = await Card.findByDeckId(deckId);
-    res.json(cards);
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 100);
+    const offset = (page - 1) * limit;
+    
+    const [cards, total] = await Promise.all([
+      Card.findByDeckId(deckId, { limit, offset }),
+      Card.countByDeckId(deckId)
+    ]);
+    
+    res.json({
+      data: cards,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -205,10 +205,12 @@ Authorization: Bearer <your-jwt-token>
 
 1. 使用强JWT密钥
 2. 启用HTTPS
-3. 实施请求频率限制
+3. ✅ 请求频率限制（已实现）
 4. 定期备份数据库
 5. 使用环境变量管理敏感信息
 6. 在生产环境禁用CORS通配符
+7. ✅ 输入验证（已实现）
+8. ✅ 请求体大小限制（已实现）
 
 ## 开发路线图
 
@@ -219,11 +221,17 @@ Authorization: Bearer <your-jwt-token>
 - [x] 前端管理页面
 - [x] iOS应用
 - [x] Android应用
+- [x] API安全优化（速率限制、输入验证）
+- [x] 性能优化（分页支持）
 - [ ] 用户认证系统
 - [ ] 数据同步优化
 - [ ] 离线支持
 - [ ] 多语言支持
 - [ ] 统计分析功能
+
+## 项目优化
+
+详细的项目优化总结请查看 [OPTIMIZATION_SUMMARY.md](OPTIMIZATION_SUMMARY.md)
 
 ## 贡献
 

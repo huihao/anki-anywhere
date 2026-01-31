@@ -7,19 +7,27 @@ function CardList({ deck }) {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newCard, setNewCard] = useState({ front: '', back: '', sourceUrl: '' });
   const [editingCard, setEditingCard] = useState(null);
+  const [pagination, setPagination] = useState({ page: 1, limit: 50, total: 0, totalPages: 1 });
 
-  const loadCards = useCallback(async () => {
+  const loadCards = useCallback(async (page = 1) => {
     if (!deck) return;
     try {
       setLoading(true);
-      const response = await cardService.getByDeckId(deck.id);
-      setCards(response.data);
+      const response = await cardService.getByDeckId(deck.id, page, pagination.limit);
+      // Handle both old format (array) and new format (paginated response)
+      if (Array.isArray(response.data)) {
+        setCards(response.data);
+        setPagination({ page: 1, limit: 50, total: response.data.length, totalPages: 1 });
+      } else {
+        setCards(response.data.data);
+        setPagination(response.data.pagination);
+      }
     } catch (err) {
       console.error('加载卡片失败', err);
     } finally {
       setLoading(false);
     }
-  }, [deck]);
+  }, [deck, pagination.limit]);
 
   useEffect(() => {
     if (deck) {
@@ -159,6 +167,26 @@ function CardList({ deck }) {
 
       {cards.length === 0 && (
         <div className="empty-message">此卡牌组还没有卡片</div>
+      )}
+
+      {pagination.totalPages > 1 && (
+        <div className="pagination">
+          <button 
+            onClick={() => loadCards(pagination.page - 1)}
+            disabled={pagination.page <= 1}
+          >
+            上一页
+          </button>
+          <span className="pagination-info">
+            第 {pagination.page} 页，共 {pagination.totalPages} 页（{pagination.total} 张卡片）
+          </span>
+          <button 
+            onClick={() => loadCards(pagination.page + 1)}
+            disabled={pagination.page >= pagination.totalPages}
+          >
+            下一页
+          </button>
+        </div>
       )}
     </div>
   );

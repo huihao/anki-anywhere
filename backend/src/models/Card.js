@@ -44,10 +44,17 @@ class Card {
     return result.rows;
   }
 
-  static async findByDeckId(deckId) {
-    const query = 'SELECT * FROM cards WHERE deck_id = $1 ORDER BY created_at DESC';
-    const result = await pool.query(query, [deckId]);
+  static async findByDeckId(deckId, options = {}) {
+    const { limit = 50, offset = 0 } = options;
+    const query = 'SELECT * FROM cards WHERE deck_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3';
+    const result = await pool.query(query, [deckId, limit, offset]);
     return result.rows;
+  }
+
+  static async countByDeckId(deckId) {
+    const query = 'SELECT COUNT(*) as total FROM cards WHERE deck_id = $1';
+    const result = await pool.query(query, [deckId]);
+    return parseInt(result.rows[0].total, 10);
   }
 
   static async findById(id) {
