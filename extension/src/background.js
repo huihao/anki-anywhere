@@ -33,7 +33,7 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
     return;
   }
 
-  await fetch(`${API_BASE}/cards`, {
+  const response = await fetch(`${API_BASE}/cards`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -42,6 +42,9 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
       sourceUrl: info.pageUrl || ''
     })
   });
+  if (!response.ok) {
+    console.warn('Failed to save card to backend.');
+  }
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
