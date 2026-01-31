@@ -5,10 +5,7 @@ exports.reviewCard = async (req, res) => {
     const { cardId, quality } = req.body;
     const userId = req.user.id;
     
-    if (quality < 0 || quality > 5) {
-      return res.status(400).json({ error: 'Quality must be between 0 and 5' });
-    }
-    
+    // Quality is already validated by middleware
     const review = await CardReview.reviewCard(cardId, userId, quality);
     res.json(review);
   } catch (error) {

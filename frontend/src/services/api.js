@@ -31,7 +31,7 @@ export const deckService = {
 
 // Card相关API
 export const cardService = {
-  getByDeckId: (deckId) => api.get(`/cards/deck/${deckId}`),
+  getByDeckId: (deckId, page = 1, limit = 50) => api.get(`/cards/deck/${deckId}?page=${page}&limit=${limit}`),
   getById: (id) => api.get(`/cards/${id}`),
   create: (data) => api.post('/cards', data),
   update: (id, data) => api.put(`/cards/${id}`, data),

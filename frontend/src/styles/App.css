@@ -536,3 +536,40 @@ select:focus {
     width: 100%;
   }
 }
+
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+  padding: 15px;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.pagination button {
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 14px;
+  color: #666;
+}
