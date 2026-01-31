@@ -23,11 +23,17 @@ class CardReviewActivity : AppCompatActivity() {
     private var deckId: Int = 0
     private var newCardsLimit: Int = 20
     private var reviewCardsLimit: Int = 100
+    private val qualityAgain = 1
+    private val qualityHard = 3
+    private val qualityGood = 4
+    private val qualityEasy = 5
+    private val relearningMinutesAgain = 10
+    private val relearningMinutesHard = 60
     private val reviewOptions = listOf(
-        ReviewOption(0, "Again", 1),
-        ReviewOption(1, "Hard", 3),
-        ReviewOption(2, "Good", 4),
-        ReviewOption(3, "Easy", 5)
+        ReviewOption(0, "Again", qualityAgain),
+        ReviewOption(1, "Hard", qualityHard),
+        ReviewOption(2, "Good", qualityGood),
+        ReviewOption(3, "Easy", qualityEasy)
     )
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -164,20 +170,36 @@ class CardReviewActivity : AppCompatActivity() {
     }
 
     private fun showIntervalToast(quality: Int, interval: Int) {
-        val hint = if (quality >= 3) {
+        val hint = if (quality >= qualityHard) {
             "下次复习: ${interval}天后"
         } else {
-            "进入短期复习 (10-60分钟内)"
+            "进入短期复习 (${relearningMinutesAgain}-${relearningMinutesHard}分钟内)"
         }
         Toast.makeText(this, hint, Toast.LENGTH_SHORT).show()
     }
 
     private fun cardQuestionText(card: Card): String {
-        return card.front
+        return renderCloze(card.front, false)
     }
 
     private fun cardAnswerText(card: Card): String {
-        return if (card.back.isNotBlank()) card.back else card.front
+        val base = if (card.back.isNotBlank()) card.back else card.front
+        return renderCloze(base, true)
+    }
+
+    private fun renderCloze(text: String, reveal: Boolean): String {
+        val regex = Regex("\\{\\{c\\d+::(.*?)(::(.*?))?}}", setOf(RegexOption.DOT_MATCHES_ALL))
+        return regex.replace(text) { match ->
+            val answer = match.groups[1]?.value.orEmpty()
+            val hint = match.groups[3]?.value
+            if (reveal) {
+                answer
+            } else if (!hint.isNullOrBlank()) {
+                "[$hint]"
+            } else {
+                "..."
+            }
+        }
     }
 
     private fun applyNewLimits(loadedCards: List<Card>): List<Card> {

@@ -120,6 +120,11 @@ enum ReviewRating: CaseIterable {
     case hard
     case good
     case easy
+
+    static let qualityAgain = 1
+    static let qualityHard = 3
+    static let qualityGood = 4
+    static let qualityEasy = 5
     
     var label: String {
         switch self {
@@ -141,10 +146,10 @@ enum ReviewRating: CaseIterable {
     
     var quality: Int {
         switch self {
-        case .again: return 1
-        case .hard: return 3
-        case .good: return 4
-        case .easy: return 5
+        case .again: return Self.qualityAgain
+        case .hard: return Self.qualityHard
+        case .good: return Self.qualityGood
+        case .easy: return Self.qualityEasy
         }
     }
     
@@ -167,6 +172,8 @@ class CardReviewViewModel: ObservableObject {
     @Published var intervalHint: String?
     private var newCardsLimit: Int = 20
     private var reviewCardsLimit: Int = 100
+    private let relearningMinutesAgain = 10
+    private let relearningMinutesHard = 60
     
     var currentCard: Card? {
         guard currentIndex < cards.count else { return nil }
@@ -262,20 +269,49 @@ class CardReviewViewModel: ObservableObject {
     }
 
     private func updateIntervalHint(quality: Int, interval: Int) {
-        if quality >= 3 {
+        if quality >= ReviewRating.qualityHard {
             intervalHint = "下次复习: \(interval)天后"
         } else {
-            intervalHint = "进入短期复习 (10-60分钟内)"
+            intervalHint = "进入短期复习 (\(relearningMinutesAgain)-\(relearningMinutesHard)分钟内)"
         }
     }
 
     func cardQuestionText(_ card: Card) -> String {
-        card.front
+        renderCloze(text: card.front, reveal: false)
     }
 
     func cardAnswerText(_ card: Card) -> String {
         let base = card.back.isEmpty ? card.front : card.back
-        return base
+        return renderCloze(text: base, reveal: true)
+    }
+
+    private func renderCloze(text: String, reveal: Bool) -> String {
+        let pattern = #"\{\{c\d+::(.*?)(::(.*?))?}}"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) else {
+            return text
+        }
+        let nsText = text as NSString
+        let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
+        if matches.isEmpty {
+            return text
+        }
+        var result = text
+        for match in matches.reversed() {
+            let answerRange = match.range(at: 1)
+            let hintRange = match.range(at: 3)
+            let answer = answerRange.location != NSNotFound ? nsText.substring(with: answerRange) : ""
+            let hint = hintRange.location != NSNotFound ? nsText.substring(with: hintRange) : ""
+            let replacement: String
+            if reveal {
+                replacement = answer
+            } else if !hint.isEmpty {
+                replacement = "[\(hint)]"
+            } else {
+                replacement = "..."
+            }
+            result = (result as NSString).replacingCharacters(in: match.range, with: replacement)
+        }
+        return result
     }
 }
 

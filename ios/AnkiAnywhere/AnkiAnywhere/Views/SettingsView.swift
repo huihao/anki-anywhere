@@ -6,6 +6,8 @@ struct SettingsView: View {
     @State private var showingSaveAlert = false
     @State private var newCardsLimit = (UserDefaults.standard.object(forKey: "newCardsLimit") as? Int) ?? 20
     @State private var reviewCardsLimit = (UserDefaults.standard.object(forKey: "reviewCardsLimit") as? Int) ?? 100
+
+    private let maxCardsLimit = 500
     
     var body: some View {
         Form {
@@ -18,10 +20,10 @@ struct SettingsView: View {
             }
             
             Section(header: Text("学习上限")) {
-                Stepper(value: $newCardsLimit, in: 0...500) {
+                Stepper(value: $newCardsLimit, in: 0...maxCardsLimit) {
                     Text("新卡上限: \(newCardsLimit)")
                 }
-                Stepper(value: $reviewCardsLimit, in: 0...500) {
+                Stepper(value: $reviewCardsLimit, in: 0...maxCardsLimit) {
                     Text("复习上限: \(reviewCardsLimit)")
                 }
             }

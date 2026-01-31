@@ -1,5 +1,8 @@
 const pool = require('../config/database');
 
+const RELEARNING_MINUTES_AGAIN = 10;
+const RELEARNING_MINUTES_HARD = 60;
+
 class CardReview {
   // SM-2 算法实现 (SuperMemo-2 间隔重复算法)
   static async reviewCard(cardId, userId, quality) {
@@ -12,7 +15,7 @@ class CardReview {
       repetitions: 0
     };
 
-    const relearningMinutes = quality <= 1 ? 10 : 60;
+    const relearningMinutes = quality <= 1 ? RELEARNING_MINUTES_AGAIN : RELEARNING_MINUTES_HARD;
 
     if (quality >= 3) {
       // 回答正确
@@ -25,7 +28,7 @@ class CardReview {
       }
       repetitions += 1;
     } else {
-      // 回答错误，进入短期复习
+      // 回答错误，进入短期复习（interval=0 表示分钟级复习）
       repetitions = 0;
       interval = 0;
     }
