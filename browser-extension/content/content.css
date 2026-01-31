@@ -1,0 +1,16 @@
+.anki-anywhere-quick-add {
+  background-color: #4CAF50;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: Arial, sans-serif;
+  z-index: 999999;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  user-select: none;
+}
+
+.anki-anywhere-quick-add:hover {
+  background-color: #45a049;
+}

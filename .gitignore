@@ -1,0 +1,37 @@
+node_modules/
+.env
+dist/
+build/
+.DS_Store
+*.log
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Backend
+backend/node_modules/
+backend/.env
+backend/dist/
+
+# Frontend
+frontend/node_modules/
+frontend/build/
+frontend/.env
+
+# Mobile
+ios/build/
+ios/DerivedData/
+ios/*.xcworkspace/xcuserdata/
+ios/*.xcodeproj/xcuserdata/
+ios/Pods/
+android/build/
+android/.gradle/
+android/local.properties
+android/.idea/
+android/*.iml
+android/app/build/
+
+# OS
+.DS_Store
+Thumbs.db
