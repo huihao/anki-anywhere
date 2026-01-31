@@ -207,5 +207,5 @@ function shouldPrefillBack(context, frontValue) {
   const normalizedContext = normalizeSelectionText(context);
   const normalizedFront = normalizeSelectionText(frontValue);
   if (!normalizedFront) return false;
-  return !normalizedContext.includes(normalizedFront);
+  return normalizedContext.includes(normalizedFront) && normalizedContext !== normalizedFront;
 }

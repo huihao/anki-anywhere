@@ -1,6 +1,7 @@
 const MAX_CONTEXT_LENGTH = 200;
 const MAX_HTML_LENGTH = 1000;
-const SELECTION_DEBOUNCE_MS = 120;
+const CONTEXT_PADDING_CHARS = 80;
+const SELECTION_DEBOUNCE_MS = 120; // 防止高频事件触发卡顿
 
 // 监听来自popup的消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -115,10 +116,10 @@ function extractSelectionContext(selectedText, container) {
     return normalizedContainerText.slice(0, MAX_CONTEXT_LENGTH);
   }
   
-  const start = Math.max(0, index - 80);
+  const start = Math.max(0, index - CONTEXT_PADDING_CHARS);
   const end = Math.min(
     normalizedContainerText.length,
-    index + normalizedSelectedText.length + 80
+    index + normalizedSelectedText.length + CONTEXT_PADDING_CHARS
   );
   return normalizedContainerText.slice(start, end);
 }
