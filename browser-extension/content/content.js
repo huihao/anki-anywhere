@@ -1,5 +1,6 @@
 const MAX_CONTEXT_LENGTH = 200;
 const MAX_HTML_LENGTH = 1000;
+const SELECTION_DEBOUNCE_MS = 120;
 
 // 监听来自popup的消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -25,7 +26,7 @@ function handleSelectionCapture() {
   selectionTimer = setTimeout(() => {
     selectionTimer = null;
     handleSelectionCaptureNow();
-  }, 120);
+  }, SELECTION_DEBOUNCE_MS);
 }
 
 function handleSelectionCaptureNow() {

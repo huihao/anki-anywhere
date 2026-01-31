@@ -190,10 +190,22 @@ document.getElementById('saveCard').addEventListener('click', async () => {
     }
   }
   
-  if (selectionInfo?.context && (!frontField.value || !selectionInfo.context.includes(frontField.value))) {
+  if (selectionInfo?.context && shouldPrefillBack(selectionInfo.context, frontField.value)) {
     const backField = document.getElementById('back');
     if (!backField.value.trim()) {
       backField.value = selectionInfo.context;
     }
   }
 })();
+
+function normalizeSelectionText(value) {
+  return (value || '').replace(/\s+/g, ' ').trim();
+}
+
+function shouldPrefillBack(context, frontValue) {
+  if (!context) return false;
+  const normalizedContext = normalizeSelectionText(context);
+  const normalizedFront = normalizeSelectionText(frontValue);
+  if (!normalizedFront) return true;
+  return !normalizedContext.includes(normalizedFront);
+}
