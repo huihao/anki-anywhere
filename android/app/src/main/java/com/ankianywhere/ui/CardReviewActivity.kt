@@ -173,27 +173,11 @@ class CardReviewActivity : AppCompatActivity() {
     }
 
     private fun cardQuestionText(card: Card): String {
-        return renderCloze(card.front, false)
+        return card.front
     }
 
     private fun cardAnswerText(card: Card): String {
-        val base = if (card.back.isNotBlank()) card.back else card.front
-        return renderCloze(base, true)
-    }
-
-    private fun renderCloze(text: String, reveal: Boolean): String {
-        val regex = Regex("\\{\\{c\\d+::(.*?)(::(.*?))?}}", setOf(RegexOption.DOT_MATCHES_ALL))
-        return regex.replace(text) { match ->
-            val answer = match.groups[1]?.value.orEmpty()
-            val hint = match.groups[3]?.value
-            if (reveal) {
-                answer
-            } else if (!hint.isNullOrBlank()) {
-                "[$hint]"
-            } else {
-                "..."
-            }
-        }
+        return if (card.back.isNotBlank()) card.back else card.front
     }
 
     private fun applyNewLimits(loadedCards: List<Card>): List<Card> {

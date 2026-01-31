@@ -270,41 +270,12 @@ class CardReviewViewModel: ObservableObject {
     }
 
     func cardQuestionText(_ card: Card) -> String {
-        renderCloze(text: card.front, reveal: false)
+        card.front
     }
 
     func cardAnswerText(_ card: Card) -> String {
         let base = card.back.isEmpty ? card.front : card.back
-        return renderCloze(text: base, reveal: true)
-    }
-
-    private func renderCloze(text: String, reveal: Bool) -> String {
-        let pattern = #"\{\{c\d+::(.*?)(::(.*?))?}}"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) else {
-            return text
-        }
-        let nsText = text as NSString
-        let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
-        if matches.isEmpty {
-            return text
-        }
-        var result = text
-        for match in matches.reversed() {
-            let answerRange = match.range(at: 1)
-            let hintRange = match.range(at: 3)
-            let answer = answerRange.location != NSNotFound ? nsText.substring(with: answerRange) : ""
-            let hint = hintRange.location != NSNotFound ? nsText.substring(with: hintRange) : ""
-            let replacement: String
-            if reveal {
-                replacement = answer
-            } else if !hint.isEmpty {
-                replacement = "[\(hint)]"
-            } else {
-                replacement = "..."
-            }
-            result = (result as NSString).replacingCharacters(in: match.range, with: replacement)
-        }
-        return result
+        return base
     }
 }
 
