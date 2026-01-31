@@ -136,7 +136,9 @@ function updateSelectionStore(selectionInfo) {
   const signature = JSON.stringify({
     url: selectionInfo.url || '',
     text: selectionInfo.text,
-    context: selectionInfo.context || ''
+    context: selectionInfo.context || '',
+    html: selectionInfo.html || '',
+    title: selectionInfo.title || ''
   });
   if (signature === lastSelectionSignature) return;
   lastSelectionSignature = signature;

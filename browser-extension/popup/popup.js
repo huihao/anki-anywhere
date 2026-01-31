@@ -183,14 +183,14 @@ document.getElementById('saveCard').addEventListener('click', async () => {
   if (selectionInfo?.text) {
     frontField.value = selectionInfo.text;
   } else {
-    // 自动填充选中的文本
+    // 无缓存信息时回退为当前选中文本
     const selectedText = await getSelectedText();
     if (selectedText) {
       frontField.value = selectedText;
     }
   }
   
-  if (selectionInfo?.context && shouldPrefillBack(selectionInfo.context, frontField.value)) {
+  if (selectionInfo?.context && shouldPrefillBack(selectionInfo.context, selectionInfo.text || frontField.value)) {
     const backField = document.getElementById('back');
     if (!backField.value.trim()) {
       backField.value = selectionInfo.context;
