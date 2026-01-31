@@ -120,7 +120,11 @@ function extractSelectionHtml(range) {
 }
 
 function updateSelectionStore(selectionInfo) {
-  const signature = `${selectionInfo.url}|${selectionInfo.text}|${selectionInfo.context || ''}`;
+  const signature = JSON.stringify({
+    url: selectionInfo.url,
+    text: selectionInfo.text,
+    context: selectionInfo.context || ''
+  });
   if (signature === lastSelectionSignature) return;
   lastSelectionSignature = signature;
   chrome.runtime.sendMessage({ action: 'updateSelectionInfo', selection: selectionInfo });

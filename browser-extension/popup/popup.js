@@ -103,7 +103,10 @@ async function getSelectionInfo() {
   }
 
   if (!cachedSelection) {
-    await getSelectedText();
+    const selectedText = await getSelectedText();
+    if (selectedText) {
+      cachedSelection = cachedSelection || { text: selectedText };
+    }
   }
   
   return cachedSelection;
@@ -187,7 +190,7 @@ document.getElementById('saveCard').addEventListener('click', async () => {
     }
   }
   
-  if (selectionInfo?.context && selectionInfo.context !== frontField.value) {
+  if (selectionInfo?.context && !selectionInfo.context.includes(frontField.value)) {
     const backField = document.getElementById('back');
     if (!backField.value.trim()) {
       backField.value = selectionInfo.context;
