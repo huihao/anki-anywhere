@@ -1,26 +1,50 @@
+const MAX_CONTEXT_LENGTH = 200;
+const MAX_HTML_LENGTH = 1000;
+const CONTEXT_PADDING_CHARS = 80;
+const SELECTION_DEBOUNCE_MS = 120; // 防止高频事件触发卡顿
+
 // 监听来自popup的消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'getSelectionInfo') {
+    sendResponse({ selection: buildSelectionInfo() });
+  }
   if (request.action === 'getSelectedText') {
-    const selectedText = window.getSelection().toString().trim();
-    sendResponse({ text: selectedText });
+    const selectionInfo = buildSelectionInfo();
+    sendResponse({ text: selectionInfo?.text || '', selection: selectionInfo });
   }
   return true;
 });
 
 // 监听文本选择事件，显示快捷按钮
 let quickAddButton = null;
+let lastSelectionSignature = '';
+let selectionTimer = null;
 
-document.addEventListener('mouseup', () => {
-  const selectedText = window.getSelection().toString().trim();
+function handleSelectionCapture() {
+  if (selectionTimer) {
+    clearTimeout(selectionTimer);
+  }
+  selectionTimer = setTimeout(() => {
+    selectionTimer = null;
+    handleSelectionCaptureNow();
+  }, SELECTION_DEBOUNCE_MS);
+}
+
+function handleSelectionCaptureNow() {
+  const selectionInfo = buildSelectionInfo();
   
-  if (selectedText) {
-    showQuickAddButton(selectedText);
+  if (selectionInfo?.text) {
+    showQuickAddButton(selectionInfo);
+    updateSelectionStore(selectionInfo);
   } else {
     hideQuickAddButton();
   }
-});
+}
 
-function showQuickAddButton(text) {
+document.addEventListener('mouseup', handleSelectionCapture);
+document.addEventListener('keyup', handleSelectionCapture);
+
+function showQuickAddButton(selectionInfo) {
   hideQuickAddButton();
   
   const selection = window.getSelection();
@@ -39,7 +63,7 @@ function showQuickAddButton(text) {
   quickAddButton.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    chrome.runtime.sendMessage({ action: 'openPopup', text });
+    chrome.runtime.sendMessage({ action: 'openPopup', selection: selectionInfo });
     hideQuickAddButton();
   });
   
@@ -51,6 +75,81 @@ function hideQuickAddButton() {
     quickAddButton.remove();
     quickAddButton = null;
   }
+}
+
+function buildSelectionInfo() {
+  const selection = window.getSelection();
+  if (!selection || !selection.rangeCount) return null;
+  
+  const text = selection.toString().trim();
+  if (!text) return null;
+  
+  const range = selection.getRangeAt(0);
+  const container = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+    ? range.commonAncestorContainer
+    : range.commonAncestorContainer.parentElement;
+  const context = extractSelectionContext(text, container || document.body);
+  const html = extractSelectionHtml(range);
+
+  return {
+    text,
+    context,
+    html,
+    title: document.title,
+    url: window.location.href
+  };
+}
+
+function normalizeText(value) {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function extractSelectionContext(selectedText, container) {
+  if (!container?.textContent) return '';
+  
+  const normalizedContainerText = normalizeText(container.textContent);
+  const normalizedSelectedText = normalizeText(selectedText);
+  if (!normalizedContainerText || !normalizedSelectedText) return '';
+  
+  const index = normalizedContainerText.indexOf(normalizedSelectedText);
+  if (index === -1) {
+    return normalizedContainerText.slice(0, MAX_CONTEXT_LENGTH);
+  }
+  
+  const start = Math.max(0, index - CONTEXT_PADDING_CHARS);
+  const end = Math.min(
+    normalizedContainerText.length,
+    index + normalizedSelectedText.length + CONTEXT_PADDING_CHARS
+  );
+  return normalizedContainerText.slice(start, end);
+}
+
+function extractSelectionHtml(range) {
+  const wrapper = document.createElement('div');
+  wrapper.appendChild(range.cloneContents());
+  const html = wrapper.innerHTML.trim();
+  if (!html) return '';
+  return html.length > MAX_HTML_LENGTH ? html.slice(0, MAX_HTML_LENGTH) : html;
+}
+
+function updateSelectionStore(selectionInfo) {
+  const signature = JSON.stringify({
+    url: selectionInfo.url || '',
+    text: selectionInfo.text,
+    context: selectionInfo.context || '',
+    html: selectionInfo.html || '',
+    title: selectionInfo.title || ''
+  });
+  if (signature === lastSelectionSignature) return;
+  lastSelectionSignature = signature;
+  chrome.runtime.sendMessage(
+    { action: 'updateSelectionInfo', selection: selectionInfo },
+    () => {
+      if (chrome.runtime.lastError) {
+        console.warn('Unable to store selection info:', chrome.runtime.lastError);
+      }
+    }
+  );
 }
 
 // 点击其他地方隐藏按钮

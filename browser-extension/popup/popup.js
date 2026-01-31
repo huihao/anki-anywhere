@@ -3,6 +3,7 @@ const TOKEN_KEY = 'authToken';
 
 let apiUrl = '';
 let authToken = '';
+let cachedSelection = null;
 
 // 加载设置
 async function loadSettings() {
@@ -79,9 +80,44 @@ async function getSelectedText() {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     const result = await chrome.tabs.sendMessage(tab.id, { action: 'getSelectedText' });
+    if (result?.selection) {
+      cachedSelection = result.selection;
+      chrome.storage.session.set({ lastSelection: result.selection });
+    }
     return result?.text || '';
   } catch (error) {
     console.error('Error getting selected text:', error);
+    return '';
+  }
+}
+
+async function getSelectionInfo() {
+  try {
+    const sessionResult = await chrome.storage.session.get('lastSelection');
+    if (sessionResult?.lastSelection) {
+      cachedSelection = sessionResult.lastSelection;
+      return sessionResult.lastSelection;
+    }
+  } catch (error) {
+    console.warn('Unable to read session selection info:', error);
+  }
+
+  if (!cachedSelection) {
+    const selectedText = await getSelectedText();
+    if (selectedText) {
+      cachedSelection = { text: selectedText };
+    }
+  }
+
+  return cachedSelection;
+}
+
+async function getActiveTabUrl() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    return tab?.url || '';
+  } catch (error) {
+    console.warn('Unable to read active tab url:', error);
     return '';
   }
 }
@@ -91,6 +127,8 @@ document.getElementById('saveCard').addEventListener('click', async () => {
   const front = document.getElementById('front').value.trim();
   const back = document.getElementById('back').value.trim();
   const deckId = document.getElementById('deck').value;
+  const selectionInfo = await getSelectionInfo();
+  const sourceUrl = selectionInfo?.url || await getActiveTabUrl();
   
   if (!front || !back) {
     showStatus('请填写卡片正面和背面', 'error');
@@ -108,8 +146,6 @@ document.getElementById('saveCard').addEventListener('click', async () => {
   }
   
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
     const response = await fetch(`${apiUrl}/cards`, {
       method: 'POST',
       headers: {
@@ -120,7 +156,7 @@ document.getElementById('saveCard').addEventListener('click', async () => {
         deckId: parseInt(deckId),
         front,
         back,
-        sourceUrl: tab.url
+        sourceUrl
       })
     });
     
@@ -142,9 +178,34 @@ document.getElementById('saveCard').addEventListener('click', async () => {
   await loadSettings();
   await loadDecks();
   
-  // 自动填充选中的文本
-  const selectedText = await getSelectedText();
-  if (selectedText) {
-    document.getElementById('front').value = selectedText;
+  const selectionInfo = await getSelectionInfo();
+  const frontField = document.getElementById('front');
+  if (selectionInfo?.text) {
+    frontField.value = selectionInfo.text;
+  } else {
+    // 无缓存信息时回退为当前选中文本
+    const selectedText = await getSelectedText();
+    if (selectedText) {
+      frontField.value = selectedText;
+    }
+  }
+  
+  if (selectionInfo?.context && shouldPrefillBack(selectionInfo.context, selectionInfo.text || frontField.value)) {
+    const backField = document.getElementById('back');
+    if (!backField.value.trim()) {
+      backField.value = selectionInfo.context;
+    }
   }
 })();
+
+function normalizeSelectionText(value) {
+  return (value || '').replace(/\s+/g, ' ').trim();
+}
+
+function shouldPrefillBack(context, frontValue) {
+  if (!context) return false;
+  const normalizedContext = normalizeSelectionText(context);
+  const normalizedFront = normalizeSelectionText(frontValue);
+  if (!normalizedFront) return false;
+  return normalizedContext.includes(normalizedFront) && normalizedContext !== normalizedFront;
+}
